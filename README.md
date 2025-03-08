@@ -72,15 +72,42 @@ public class QuickStart {
 
 ## Examples
 
-### Simple Chat
+### Simple Console Chat
 
 ```java
-String response = GroqApiExtensions.chatText(
-    client,
-    "llama-3.2-70b",
-    "Explain Java CompletableFuture in simple terms",
-    null
-).get(30, TimeUnit.SECONDS);
+import java.util.Scanner;
+
+import com.groq.api.client.GroqApiClient;
+import com.groq.api.client.GroqClientFactory;
+import com.groq.api.extensions.GroqApiExtensions;
+
+public class Example {
+    public static void main(String[] args) throws Exception {
+        
+    	String apiKey = "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";
+    	 
+        if (apiKey.isEmpty()) {
+            System.out.println("Missing API_KEY");
+            System.exit(1);
+        }
+        var scanner = new Scanner(System.in);
+        
+        try (GroqApiClient client = GroqClientFactory.createClient(apiKey)) {
+        	
+        	var ask = "";
+        	while (!ask.equalsIgnoreCase("exit")) {
+        		System.out.print("you: ");
+                ask = scanner.nextLine();
+                if (!ask.equalsIgnoreCase("exit")) {
+                    String response = GroqApiExtensions.chatText(client, "llama-3.3-70b-versatile", ask, "You are a helpfull assistant.").get();
+                    System.out.print("\nGroq: ");
+                    System.out.println(response + "\n");	}
+        	}
+        	System.out.print("\nGroq: bye ! ");
+            scanner.close();
+        }
+    }
+}
 ```
 
 ### Streaming Response
