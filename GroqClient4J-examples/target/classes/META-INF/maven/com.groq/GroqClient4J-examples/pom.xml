@@ -1,0 +1,35 @@
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.groq</groupId>
+    <artifactId>groqclient4j</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>GroqClient4J-examples</artifactId>
+<packaging>jar</packaging>
+
+    <name>GroqClient4J Examples</name>
+    <description>Example code for Groq API client</description>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.groq</groupId>
+            <artifactId>groqclient4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.groq.api.examples.AllExamples</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

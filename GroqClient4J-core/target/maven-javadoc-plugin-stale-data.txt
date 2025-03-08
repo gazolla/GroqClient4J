@@ -1,0 +1,53 @@
+@options
+@packages
+-classpath
+'C:/Users/gazol/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.15.2/jackson-databind-2.15.2.jar;C:/Users/gazol/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.15.2/jackson-annotations-2.15.2.jar;C:/Users/gazol/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.15.2/jackson-core-2.15.2.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'17'
+-sourcepath
+'C:/Java/workspaces/wkspc/GroqClient4J/GroqClient4J-core/src/main/java;C:/Java/workspaces/wkspc/GroqClient4J/GroqClient4J-core/target/generated-sources/annotations'
+-author
+-bottom
+'Copyright &#169; 2025. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'C:/Java/workspaces/wkspc/GroqClient4J/GroqClient4J-core/target/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'GroqClient4J Library 1.0.0-SNAPSHOT API'
+-use
+-version
+-windowtitle
+'GroqClient4J Library 1.0.0-SNAPSHOT API'
+com.groq.api.client
+com.groq.api.config
+com.groq.api.exceptions
+com.groq.api.extensions
+com.groq.api.models
+com.groq.api.utils
+C:\Users\gazol\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.15.2\jackson-databind-2.15.2.jar = 1713121380885
+C:\Users\gazol\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.15.2\jackson-annotations-2.15.2.jar = 1713121380929
+C:\Users\gazol\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.15.2\jackson-core-2.15.2.jar = 1713121183992
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\src\main\java = 1741271894200
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\generated-sources\annotations = 1741272574568
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\allclasses-index.html = 1741273470016
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\allpackages-index.html = 1741273470019
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\constant-values.html = 1741273469851
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\element-list = 1741273469768
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\help-doc.html = 1741273470063
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\index-all.html = 1741273470052
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\index.html = 1741273469994
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\member-search-index.js = 1741273470025
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\module-search-index.js = 1741273470021
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\overview-summary.html = 1741273470058
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\overview-tree.html = 1741273469989
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\package-search-index.js = 1741273470022
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\search.html = 1741273470055
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\serialized-form.html = 1741273469867
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\tag-search-index.js = 1741273470027
+C:\Java\workspaces\wkspc\GroqClient4J\GroqClient4J-core\target\apidocs\type-search-index.js = 1741273470024
