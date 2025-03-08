@@ -84,7 +84,7 @@ import com.groq.api.extensions.GroqApiExtensions;
 public class Example {
     public static void main(String[] args) throws Exception {
         
-    	String apiKey = "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";
+    	String apiKey = "your key here";
     	 
         if (apiKey.isEmpty()) {
             System.out.println("Missing API_KEY");
