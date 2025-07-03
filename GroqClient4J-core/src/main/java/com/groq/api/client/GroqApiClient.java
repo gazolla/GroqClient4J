@@ -391,7 +391,6 @@ public class GroqApiClient implements GroqApi {
                 // Or if there's content and tool_calls is explicitly null (not an array)
                 // This covers cases where LLM just gives a text response.
                 if (!content.isEmpty() && (toolCalls.isEmpty() || toolCalls.isNull())) {
-                    System.out.println("LLM returned final content: " + content);
                     return CompletableFuture.completedFuture(content);
                 }
                 
