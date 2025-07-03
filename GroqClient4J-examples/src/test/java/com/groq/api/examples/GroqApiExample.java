@@ -53,7 +53,7 @@ public class GroqApiExample {
     private static void simpleChatExample(GroqApiClient client) throws Exception {
         System.out.println("\n=== Simple Chat Example ===");
         
-        String model = "llama-3.3-70b-versatile";
+        String model = "deepseek-r1-distill-llama-70b";
         String userMessage = "What are the benefits of using Java records?";
         String systemMessage = "You are a helpful programming assistant.";
         
@@ -70,7 +70,7 @@ public class GroqApiExample {
     private static void streamChatExample(GroqApiClient client) throws Exception {
         System.out.println("\n=== Streaming Chat Example ===");
         
-        String model = "llama-3.3-70b-versatile";
+        String model = "deepseek-r1-distill-llama-70b";
         String userMessage = "Count from 1 to 10";
         
         // Subscribe to the stream
@@ -100,32 +100,30 @@ public class GroqApiExample {
         System.out.println("\n=== Tools Example ===");
         
         // Define a simple weather tool
-
         ObjectNode weatherParams = MAPPER.createObjectNode();
-        ObjectNode typeObject = MAPPER.createObjectNode();
-        typeObject.put("type", "object");
-
+        
+        // Set the root-level type to "object"
+        weatherParams.put("type", "object");
+        
+        // Define properties
         ObjectNode properties = MAPPER.createObjectNode();
         ObjectNode locationProp = MAPPER.createObjectNode();
         locationProp.put("type", "string");
         locationProp.put("description", "The city and state, e.g. San Francisco, CA");
-
         properties.set("location", locationProp);
-        typeObject.set("properties", properties);
-
+        weatherParams.set("properties", properties);
+        
+        // Define required fields
         ArrayNode requiredArray = MAPPER.createArrayNode();
         requiredArray.add("location");
-        typeObject.set("required", requiredArray);
-
-
-        weatherParams.set("type", typeObject);
+        weatherParams.set("required", requiredArray);
         
         Function weatherFunction = new Function(
             "get_current_weather",
             "Get the current weather in a given location",
             weatherParams,
             args -> {
-            	try {
+                try {
                     // Parse location from arguments
                     JsonNode argsNode = MAPPER.readTree(args);
                     String location = argsNode.path("location").asText("Unknown");
@@ -153,7 +151,7 @@ public class GroqApiExample {
         String response = client.runConversationWithTools(
             "What's the weather like in San Francisco?",
             List.of(weatherTool),
-            "llama-3.3-70b-versatile",
+            "meta-llama/llama-4-maverick-17b-128e-instruct",
             "You are a helpful assistant with access to weather information."
         ).get(30, TimeUnit.SECONDS);
         

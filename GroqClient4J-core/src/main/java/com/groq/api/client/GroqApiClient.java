@@ -320,13 +320,14 @@ public class GroqApiClient implements GroqApi {
     }
 
     /**
-     * Runs a conversation with tools.
+     * Runs a conversation with tools, potentially over multiple turns, to reach a final answer.
+     * This method maintains compatibility with the existing interface.
      *
      * @param userPrompt The user's prompt or message.
      * @param tools The list of tools to make available.
      * @param model The model to use.
      * @param systemMessage Optional system message.
-     * @return A CompletableFuture that will complete with the response text.
+     * @return A CompletableFuture that will complete with the final response text.
      */
     @Override
     public CompletableFuture<String> runConversationWithTools(
@@ -334,9 +335,9 @@ public class GroqApiClient implements GroqApi {
             List<Tool> tools,
             String model,
             String systemMessage) {
-        
+
         List<JsonNode> messages = new ArrayList<>();
-        
+
         // Add system message if provided
         if (systemMessage != null && !systemMessage.isBlank()) {
             ObjectNode systemNode = objectMapper.createObjectNode()
@@ -344,84 +345,133 @@ public class GroqApiClient implements GroqApi {
                 .put("content", systemMessage);
             messages.add(systemNode);
         }
-        
-        // Add user message
+
+        // Add initial user message
         ObjectNode userNode = objectMapper.createObjectNode()
             .put("role", "user")
             .put("content", userPrompt);
         messages.add(userNode);
-        
-        // Create tool request
-        JsonNode request = JsonUtils.createToolsRequest(model, messages, tools, 0.7f);
-        
-        // First API call to get tool calls
+
+        // Delegate to the multi-turn execution logic
+        return executeMultiTurnConversation(messages, tools, model);
+    }
+
+    /**
+     * Internal recursive method to manage the multi-turn conversation flow.
+     * This method repeatedly calls the LLM and executes tools until a final content response is received.
+     *
+     * @param messages The current list of messages representing the conversation history.
+     * @param availableTools The list of tools the LLM can use.
+     * @param model The LLM model to use.
+     * @return A CompletableFuture that completes with the final content from the LLM.
+     */
+    private CompletableFuture<String> executeMultiTurnConversation(
+            List<JsonNode> messages,
+            List<Tool> availableTools,
+            String model) {
+
+        // The temperature 0.7f is hardcoded, consider making it configurable
+        JsonNode request = JsonUtils.createToolsRequest(model, messages, availableTools, 0.7f);
+
         return createChatCompletion(request)
             .thenCompose(response -> {
                 JsonNode choices = response.path("choices");
-                if (choices.isEmpty() || choices.size() == 0) {
+                if (choices.isEmpty()) { // Check for empty choices array
+                    // No choices, potentially an error or unexpected response from LLM
+                    System.err.println("LLM returned no choices.");
                     return CompletableFuture.completedFuture(null);
                 }
-                
+
                 JsonNode message = choices.path(0).path("message");
                 JsonNode toolCalls = message.path("tool_calls");
-                
-                // If no tool calls, just return the content
-                if (toolCalls.isEmpty() || toolCalls.size() == 0) {
-                    return CompletableFuture.completedFuture(
-                        message.path("content").asText("")
-                    );
+                String content = message.path("content").asText(""); // Get content, might be empty if only tool_calls
+
+                // --- Decision Point: Is this the final response? ---
+                // If LLM provides content AND no tool calls, it's a final response.
+                // Or if there's content and tool_calls is explicitly null (not an array)
+                // This covers cases where LLM just gives a text response.
+                if (!content.isEmpty() && (toolCalls.isEmpty() || toolCalls.isNull())) {
+                    System.out.println("LLM returned final content: " + content);
+                    return CompletableFuture.completedFuture(content);
                 }
                 
-                // Add assistant message with tool calls to conversation
+                // If LLM did not suggest any tools and also did not give final content,
+                // this might indicate an issue or a turn where LLM chose not to respond textually or with tools.
+                // We should handle this carefully to avoid infinite loops.
+                if (toolCalls.isEmpty() && content.isEmpty()) {
+                     System.err.println("LLM returned no tool calls and no content. Ending conversation to prevent loop.");
+                     return CompletableFuture.completedFuture(null); // Or an error message
+                }
+
+
+                // Add assistant message (with tool calls) to the conversation history
+                // This is crucial for the LLM to understand what it previously suggested
                 messages.add(message);
-                
-                // Process tool calls
-                List<CompletableFuture<JsonNode>> toolResponses = new ArrayList<>();
-                
-                for (JsonNode toolCall : toolCalls) {
-                    String functionName = toolCall.path("function").path("name").asText();
-                    String arguments = toolCall.path("function").path("arguments").asText();
-                    String toolCallId = toolCall.path("id").asText();
-                    
-                    // Find matching tool
-                    tools.stream()
-                        .filter(tool -> tool.function().name().equals(functionName))
-                        .findFirst()
-                        .ifPresent(tool -> {
-                            // Execute the tool and add response to messages
-                            CompletableFuture<JsonNode> toolResponse = tool.function().executor()
-                                .execute(arguments)
-                                .thenApply(result -> {
-                                    JsonNode responseMessage = JsonUtils.createToolResponseMessage(
-                                        toolCallId, 
-                                        functionName, 
-                                        result
-                                    );
-                                    // Add tool response to messages
-                                    messages.add(responseMessage);
-                                    return responseMessage;
-                                });
-                            
-                            toolResponses.add(toolResponse);
-                        });
+
+                // Process tool calls concurrently
+                List<CompletableFuture<JsonNode>> toolResponsesFutures = new ArrayList<>();
+                if (toolCalls.isArray()) { // Ensure toolCalls is an array before iterating
+                    for (JsonNode toolCall : toolCalls) {
+                        String functionName = toolCall.path("function").path("name").asText();
+                        String arguments = toolCall.path("function").path("arguments").asText();
+                        String toolCallId = toolCall.path("id").asText();
+
+                        System.out.println("Processing tool call: " + functionName + " with args: " + arguments);
+
+                        // Find matching tool
+                        availableTools.stream()
+                            .filter(tool -> tool.function().name().equals(functionName))
+                            .findFirst()
+                            .ifPresentOrElse(tool -> {
+                                CompletableFuture<JsonNode> toolResponseFuture = tool.function().executor()
+                                    .execute(arguments) // Execute the tool
+                                    .thenApply(result -> {
+                                        System.out.println("Tool " + functionName + " executed. Result: " + result);
+                                        return JsonUtils.createToolResponseMessage(toolCallId, functionName, result);
+                                    })
+                                    .exceptionally(e -> {
+                                        // Handle tool execution errors
+                                        System.err.println("Error executing tool " + functionName + ": " + e.getMessage());
+                                        return JsonUtils.createToolResponseMessage(toolCallId, functionName, "Error: " + e.getMessage());
+                                    });
+                                toolResponsesFutures.add(toolResponseFuture);
+                            }, () -> {
+                                // Handle case where tool is not found
+                                String errorMessage = "Error: Tool '" + functionName + "' not found.";
+                                System.err.println(errorMessage);
+                                toolResponsesFutures.add(CompletableFuture.completedFuture(
+                                    JsonUtils.createToolResponseMessage(toolCallId, functionName, errorMessage)
+                                ));
+                            });
+                    }
+                } else {
+                    // This case means LLM returned something unexpected for tool_calls,
+                    // or just an empty object, not an array.
+                    System.out.println("No tool calls suggested by LLM in this turn, or format was unexpected.");
                 }
-                
-                // Wait for all tool responses to complete
-                return CompletableFuture.allOf(
-                    toolResponses.toArray(new CompletableFuture[0])
-                ).thenCompose(v -> {
-                    // Create second request with updated messages
-                    JsonNode secondRequest = JsonUtils.createChatRequest(model, messages, 0.7f);
-                    
-                    // Make second API call to get final response
-                    return createChatCompletion(secondRequest)
-                        .thenApply(secondResponse -> 
-                            JsonUtils.extractContentFromCompletion(secondResponse)
-                        );
-                });
+
+                // Wait for all tool responses from this turn to complete
+                return CompletableFuture.allOf(toolResponsesFutures.toArray(new CompletableFuture[0]))
+                    .thenCompose(v -> {
+                        // Add each tool response to the messages list
+                        // This step is crucial: add the results of the tool execution to the conversation history
+                        toolResponsesFutures.forEach(future -> {
+                            try {
+                                messages.add(future.join()); // .join() is safe here because allOf has completed
+                            } catch (Exception e) {
+                                // Handle exceptions during tool response processing if necessary
+                                System.err.println("Error adding tool response to messages: " + e.getMessage());
+                                // Decide if you want to continue or terminate on this error
+                            }
+                        });
+
+                        // Now, recursively call the method to continue the conversation
+                        // The LLM will now see the original prompt, its tool suggestions, and the tool results
+                        System.out.println("Tool responses added. Continuing conversation for next turn...");
+                        return executeMultiTurnConversation(messages, availableTools, model);
+                    });
             });
     }
-
     /**
      * Lists available models.
      *

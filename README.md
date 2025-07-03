@@ -104,7 +104,7 @@ public class Example {
                     System.out.println(response + "\n");	}
         	}
         	System.out.print("\nGroq: bye ! ");
-            scanner.close();
+         	scanner.close();
         }
     }
 }

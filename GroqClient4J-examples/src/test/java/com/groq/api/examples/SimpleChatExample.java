@@ -18,7 +18,7 @@ public class SimpleChatExample {
            
             String response = GroqApiExtensions.chatText(
                 client,
-                "llama-3.3-70b-versatile",
+                "deepseek-r1-distill-llama-70b",
                 "Explain Assicronous programming in Java",
                 "You are a Java expert."
             ).get();
